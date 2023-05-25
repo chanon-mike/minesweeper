@@ -115,3 +115,42 @@
   height: 1em;
   margin-left: 0.5rem;
 }
+
+/* first click isn't bomb */
+
+/* Board and cell */
+.board {
+  background-color: #c0c0c0;
+  width: 480px;
+  height: 480px;
+  display: grid;
+  grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+}
+
+.cell {
+  border: 1px solid #676767;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-self: center;
+}
+
+.square {
+  width: 60px;
+  height: 60px;
+  background-color: #c6c6c6;
+  z-index: 1;
+  border-color: #fff #676767 #676767 #fff;
+  border-style: solid;
+  border-width: 0.5em;
+  display: flex;
+  align-self: center;
+}
+
+.icon {
+  width: 30px;
+  height: 30px;
+  background-image: url('~/assets/images/icons.png');
+  margin: auto;
+  position: relative;
+}
