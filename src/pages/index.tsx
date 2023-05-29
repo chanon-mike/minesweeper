@@ -147,6 +147,8 @@ const Home = () => {
     console.log(board);
   };
 
+  // Generate empty cell and board each render
+  findEmptyCell();
   generateBoard();
 
   // Left Click
