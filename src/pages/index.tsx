@@ -16,9 +16,9 @@ const Home = () => {
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
   ]);
-  // o -> bomb
-  // 1 -> no bomb
-  const [bombMap, setBombMap] = useState([
+  // o -> mine
+  // 1 -> no mine
+  const [mineMap, setMineMap] = useState([
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -29,7 +29,7 @@ const Home = () => {
     [0, 0, 0, 0, 0, 0, 0, 0],
   ]);
 
-  const bombCount = 10;
+  const mineCount = 10;
   const directions = [
     [-1, 0], // Up
     [-1, 1], // Up-Right
@@ -46,30 +46,30 @@ const Home = () => {
   // 1-8 -> number
   // 9 -> square + question mark
   // 10 -> square + flag
-  // 11 -> clear + bomb
+  // 11 -> clear + mine
   // 12 -> clear + flag
   let board: number[][] = [];
 
   const isPlaying = userInput.some((row) => row.some((input) => input !== 0));
-  const isFailure = userInput.some((row, y) =>
-    row.some((input, x) => input === 1 && bombMap[y][x] === 1)
+  const isFailing = !userInput.some((row, y) =>
+    row.some((input, x) => input === 1 && mineMap[y][x] === 1)
   );
   const isFirst = userInput.every((row) => row.every((cell) => cell !== 1));
   const emptyCellList: number[][] = [];
 
-  // PLant bombs only once
+  // PLant mines only once
   const plantMines = () => {
-    const newBombMap = bombMap;
-    for (let i = 0; i < bombCount; i++) {
+    const newmineMap = mineMap;
+    for (let i = 0; i < mineCount; i++) {
       const x = Math.floor(Math.random() * 8);
       const y = Math.floor(Math.random() * 8);
-      newBombMap[y][x] = 1;
+      newmineMap[y][x] = 1;
     }
-    setBombMap(newBombMap);
+    setMineMap(newmineMap);
   };
 
-  // Calculate bomb count nearby
-  const calculateBombCount = (x: number, y: number) => {
+  // Calculate mine count nearby
+  const calculateMineCount = (x: number, y: number) => {
     let count = 0;
     for (const [dx, dy] of directions) {
       const newX = x + dx;
@@ -79,7 +79,7 @@ const Home = () => {
         newX < userInput[0].length &&
         newY >= 0 &&
         newY < userInput.length &&
-        bombMap[newY][newX] === 1
+        mineMap[newY][newX] === 1
       ) {
         count++;
       }
@@ -91,8 +91,17 @@ const Home = () => {
   const findEmptyCell = () => {
     for (let y = 0; y < userInput.length; y++) {
       for (let x = 0; x < userInput[0].length; x++) {
-        const count = calculateBombCount(x, y);
+        const count = calculateMineCount(x, y);
         if (count === 0) emptyCellList.push([x, y]);
+      }
+    }
+  };
+
+  // Reveal all mine
+  const revealMines = () => {
+    for (let y = 0; y < userInput.length; y++) {
+      for (let x = 0; x < userInput[0].length; x++) {
+        if (mineMap[y][x] === 1) board[y][x] = 11;
       }
     }
   };
@@ -113,15 +122,15 @@ const Home = () => {
         y < 0 ||
         y >= yLength ||
         board[y][x] !== 0 ||
-        bombMap[y][x] === 1
+        mineMap[y][x] === 1
       ) {
         return;
       }
 
-      const count = calculateBombCount(x, y);
+      const count = calculateMineCount(x, y);
       board[y][x] = count || -1;
       // Reveal neighboring cells recursively only if current visited cell is empty
-      // if not empty and not bomb, set the current cell to number of nearby bomb
+      // if not empty and not mine, set the current cell to number of nearby mine
       if (count === 0) {
         if (emptyCellList.some((i) => i[0] === x && i[1] === y)) {
           for (const [dx, dy] of directions) {
@@ -131,34 +140,37 @@ const Home = () => {
       }
     };
 
-    // Generate the board based on userInput and bombMap
+    // Generate the board based on userInput and mineMap
     for (let y = 0; y < yLength; y++) {
       for (let x = 0; x < xLength; x++) {
         if (userInput[y][x] === 1) {
-          if (bombMap[y][x] === 1) {
-            // Reveal all bombs
-            board[y][x] = 11;
+          if (mineMap[y][x] === 1) {
+            // Reveal all mines
+            // board[y][x] = 11;
+            revealMines();
           } else {
             revealNearbyCell(x, y);
           }
         }
       }
     }
-    console.log(board);
   };
 
   // Generate empty cell and board each render
   findEmptyCell();
   generateBoard();
+  // Count the cell that already flip after generate board (only clear and number)
+  const openCellCount: number = board.flat().filter((cell) => cell !== 0 && cell < 9).length;
+  console.log(openCellCount, board);
 
   // Left Click
   const onClick = (x: number, y: number) => {
-    // Generate random bomb only once at the start
+    // Generate random mine only once at the start
     if (isFirst) {
       plantMines();
     }
 
-    if (board[y][x] === 0) {
+    if (board[y][x] === 0 && isFailing) {
       const newUserInput: (0 | 1 | 2 | 3)[][] = JSON.parse(JSON.stringify(userInput));
       newUserInput[y][x] = 1;
       setUserInput(newUserInput);
@@ -204,7 +216,7 @@ const Home = () => {
                   // Flag clear
                   <div className={styles.icon} style={{ backgroundPosition: `${-30 * 9}px` }} />
                 ) : (
-                  // Other; icon and bomb
+                  // Other; icon and mine
                   <div
                     className={styles.icon}
                     style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
