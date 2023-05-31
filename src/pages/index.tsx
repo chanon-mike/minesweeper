@@ -50,7 +50,7 @@ const Home = () => {
   // 12 -> clear + flag
   let board: number[][] = [];
 
-  const isPlaying = userInput.some((row) => row.some((input) => input !== 0));
+  // const isPlaying = userInput.some((row) => row.some((input) => input !== 0));
   const isFailing = userInput.some((row, y) =>
     row.some((input, x) => input === 1 && mineMap[y][x] === 1)
   );
@@ -66,7 +66,6 @@ const Home = () => {
       let randX = Math.floor(Math.random() * userInput[0].length);
       let randY = Math.floor(Math.random() * userInput.length);
       // When first click result in mine, shift it to random place
-      console.log(newmineMap.flat().filter((cell: number) => cell === 1).length);
       while (randX === x && randY === y) {
         randX = Math.floor(Math.random() * userInput[0].length);
         randY = Math.floor(Math.random() * userInput.length);
@@ -219,27 +218,26 @@ const Home = () => {
   };
 
   // Restart
-  // const restartGame = () => {
-  //   // Initialize empty board
-  //   const newInitialBoard: (0 | 1 | 2 | 3)[][] = [
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //     [0, 0, 0, 0, 0, 0, 0, 0],
-  //   ];
-  //   board = newInitialBoard;
-  //   setUserInput(newInitialBoard);
-  //   setMineMap(newInitialBoard);
-  //   console.log(newInitialBoard, userInput, mineMap);
-  // };
+  const restartGame = () => {
+    // Initialize empty board
+    const newInitialBoard: (0 | 1 | 2 | 3)[][] = [
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+    board = newInitialBoard;
+    setUserInput(newInitialBoard);
+    setMineMap(newInitialBoard);
+  };
 
   return (
     <div className={styles.container}>
-      {/* <button onClick={restartGame}>Restart</button> */}
+      <button onClick={restartGame}>Restart</button>
       <div className={styles.board}>
         {board.map((row, y) =>
           row.map((val, x) => (
@@ -249,7 +247,7 @@ const Home = () => {
               onClick={() => onClick(x, y)}
               onContextMenu={(e) => handleContextMenu(x, y, e)}
             >
-              {mineMap[y][x]}
+              {/* {mineMap[y][x]} */}
               {val !== -1 &&
                 (val === 0 ? (
                   <div className={styles.square} />
