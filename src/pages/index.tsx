@@ -4,8 +4,8 @@ import styles from './index.module.css';
 const Home = () => {
   // 0 -> non click
   // 1 -> left click
-  // 2 -> question mark
-  // 3 -> flag mark
+  // 2 -> flag mark
+  // 3 -> question mark
   const [userInput, setUserInput] = useState<(0 | 1 | 2 | 3)[][]>([
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -44,14 +44,14 @@ const Home = () => {
   // -1 -> clear (nothing)
   // 0 -> square (has border)
   // 1-8 -> number
-  // 9 -> square + question mark
-  // 10 -> square + flag
+  // 9 -> square + flag
+  // 10 -> square + question mark
   // 11 -> clear + mine
   // 12 -> clear + flag
   let board: number[][] = [];
 
   const isPlaying = userInput.some((row) => row.some((input) => input !== 0));
-  const isFailing = !userInput.some((row, y) =>
+  const isFailing = userInput.some((row, y) =>
     row.some((input, x) => input === 1 && mineMap[y][x] === 1)
   );
   const isFirst = userInput.every((row) => row.every((cell) => cell !== 1));
@@ -59,10 +59,10 @@ const Home = () => {
 
   // PLant mines only once
   const plantMines = () => {
-    const newmineMap = mineMap;
+    const newmineMap = JSON.parse(JSON.stringify(mineMap));
     for (let i = 0; i < mineCount; i++) {
-      const x = Math.floor(Math.random() * 8);
-      const y = Math.floor(Math.random() * 8);
+      const x = Math.floor(Math.random() * userInput[0].length);
+      const y = Math.floor(Math.random() * userInput.length);
       newmineMap[y][x] = 1;
     }
     setMineMap(newmineMap);
@@ -97,11 +97,11 @@ const Home = () => {
     }
   };
 
-  // Reveal all mine
-  const revealMines = () => {
+  // Reveal all mine (n: flag or bomb indication)
+  const revealMines = (n: number) => {
     for (let y = 0; y < userInput.length; y++) {
       for (let x = 0; x < userInput[0].length; x++) {
-        if (mineMap[y][x] === 1) board[y][x] = 11;
+        if (mineMap[y][x] === 1) board[y][x] = n;
       }
     }
   };
@@ -146,11 +146,16 @@ const Home = () => {
         if (userInput[y][x] === 1) {
           if (mineMap[y][x] === 1) {
             // Reveal all mines
-            // board[y][x] = 11;
-            revealMines();
+            revealMines(11);
           } else {
             revealNearbyCell(x, y);
           }
+        } else if (userInput[y][x] === 2) {
+          // question mark
+          board[y][x] = 10;
+        } else if (userInput[y][x] === 3) {
+          // flag mark
+          board[y][x] = 9;
         }
       }
     }
@@ -159,18 +164,39 @@ const Home = () => {
   // Generate empty cell and board each render
   findEmptyCell();
   generateBoard();
+
   // Count the cell that already flip after generate board (only clear and number)
-  const openCellCount: number = board.flat().filter((cell) => cell !== 0 && cell < 9).length;
-  console.log(openCellCount, board);
+  const openCellCount = board.flat().filter((cell) => cell !== 0 && cell < 9).length;
+  // console.log(openCellCount, board, userInput, mineMap);
+
+  // Game end when open all cell except mine (reveal flag)
+  if (openCellCount + mineCount === userInput.length * userInput[0].length) {
+    revealMines(12);
+  }
 
   // Left Click
   const onClick = (x: number, y: number) => {
     // Generate random mine only once at the start
     if (isFirst) {
       plantMines();
+      console.log('First click');
     }
 
-    if (board[y][x] === 0 && isFailing) {
+    if (board[y][x] === 0 && !isFailing) {
+      // // When first click result in mine, shift it to random place
+      // while (
+      //   mineMap[y][x] === 1 &&
+      //   mineMap.flat().filter((cell) => cell === 1).length !== mineCount
+      // ) {
+      //   console.log('algorithm');
+      //   const newX = Math.floor(Math.random() * userInput[0].length);
+      //   const newY = Math.floor(Math.random() * userInput.length);
+      //   if (mineMap[newY][newX] === 1) {
+      //     mineMap[y][x] = 0;
+      //     mineMap[newY][newX] = 1;
+      //   }
+      // }
+      // Receive user input
       const newUserInput: (0 | 1 | 2 | 3)[][] = JSON.parse(JSON.stringify(userInput));
       newUserInput[y][x] = 1;
       setUserInput(newUserInput);
@@ -178,12 +204,46 @@ const Home = () => {
   };
 
   // Right Click
-  const handleContextMenu = (e: React.MouseEvent<HTMLElement>) => {
+  const handleContextMenu = (x: number, y: number, e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
+    const newUserInput: (0 | 1 | 2 | 3)[][] = JSON.parse(JSON.stringify(userInput));
+
+    if (board[y][x] === 0 && !isFailing) {
+      // flag
+      newUserInput[y][x] = 2;
+    } else if (userInput[y][x] === 2 && !isFailing) {
+      // question mark
+      newUserInput[y][x] = 3;
+    } else if (userInput[y][x] === 3 && !isFailing) {
+      // return to normal
+      newUserInput[y][x] = 0;
+    }
+
+    setUserInput(newUserInput);
   };
+
+  // Restart
+  // const restartGame = () => {
+  //   // Initialize empty board
+  //   const newInitialBoard: (0 | 1 | 2 | 3)[][] = [
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //     [0, 0, 0, 0, 0, 0, 0, 0],
+  //   ];
+  //   board = newInitialBoard;
+  //   setUserInput(newInitialBoard);
+  //   setMineMap(newInitialBoard);
+  //   console.log(newInitialBoard, userInput, mineMap);
+  // };
 
   return (
     <div className={styles.container}>
+      {/* <button onClick={restartGame}>Restart</button> */}
       <div className={styles.board}>
         {board.map((row, y) =>
           row.map((val, x) => (
@@ -191,20 +251,13 @@ const Home = () => {
               className={styles.cell}
               key={`${x}-${y}`}
               onClick={() => onClick(x, y)}
-              onContextMenu={handleContextMenu}
+              onContextMenu={(e) => handleContextMenu(x, y, e)}
             >
+              {mineMap[y][x]}
               {val !== -1 &&
                 (val === 0 ? (
                   <div className={styles.square} />
-                ) : val === 9 ? (
-                  // Question mark
-                  <div className={styles.square}>
-                    <div
-                      className={styles.icon}
-                      style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
-                    />
-                  </div>
-                ) : val === 10 ? (
+                ) : val === 9 || val === 10 ? (
                   // Flag mark
                   <div className={styles.square}>
                     <div
