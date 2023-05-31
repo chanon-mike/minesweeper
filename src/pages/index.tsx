@@ -57,13 +57,23 @@ const Home = () => {
   const isFirst = userInput.every((row) => row.every((cell) => cell !== 1));
   const emptyCellList: number[][] = [];
 
-  // PLant mines only once
-  const plantMines = () => {
+  // PLant mines only once when game start
+  const plantMines = (x: number, y: number) => {
     const newmineMap = JSON.parse(JSON.stringify(mineMap));
-    for (let i = 0; i < mineCount; i++) {
-      const x = Math.floor(Math.random() * userInput[0].length);
-      const y = Math.floor(Math.random() * userInput.length);
-      newmineMap[y][x] = 1;
+    let currentMineCount = 0;
+
+    while (currentMineCount !== mineCount) {
+      let randX = Math.floor(Math.random() * userInput[0].length);
+      let randY = Math.floor(Math.random() * userInput.length);
+      // When first click result in mine, shift it to random place
+      console.log(newmineMap.flat().filter((cell: number) => cell === 1).length);
+      while (randX === x && randY === y) {
+        randX = Math.floor(Math.random() * userInput[0].length);
+        randY = Math.floor(Math.random() * userInput.length);
+      }
+      // Assign a mine to random coor, iterate current mine count
+      newmineMap[randY][randX] = 1;
+      currentMineCount = newmineMap.flat().filter((cell: number) => cell === 1).length;
     }
     setMineMap(newmineMap);
   };
@@ -178,24 +188,10 @@ const Home = () => {
   const onClick = (x: number, y: number) => {
     // Generate random mine only once at the start
     if (isFirst) {
-      plantMines();
-      console.log('First click');
+      plantMines(x, y);
     }
 
     if (board[y][x] === 0 && !isFailing) {
-      // // When first click result in mine, shift it to random place
-      // while (
-      //   mineMap[y][x] === 1 &&
-      //   mineMap.flat().filter((cell) => cell === 1).length !== mineCount
-      // ) {
-      //   console.log('algorithm');
-      //   const newX = Math.floor(Math.random() * userInput[0].length);
-      //   const newY = Math.floor(Math.random() * userInput.length);
-      //   if (mineMap[newY][newX] === 1) {
-      //     mineMap[y][x] = 0;
-      //     mineMap[newY][newX] = 1;
-      //   }
-      // }
       // Receive user input
       const newUserInput: (0 | 1 | 2 | 3)[][] = JSON.parse(JSON.stringify(userInput));
       newUserInput[y][x] = 1;
