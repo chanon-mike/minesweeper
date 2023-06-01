@@ -77,6 +77,11 @@ const Home = () => {
     setMineMap(newmineMap);
   };
 
+  // Check if game end (reveal flag)
+  const isWinning = () => {
+    return openCellCount + mineCount === userInput.length * userInput[0].length;
+  };
+
   // Calculate mine count nearby
   const calculateMineCount = (x: number, y: number) => {
     let count = 0;
@@ -176,10 +181,13 @@ const Home = () => {
 
   // Count the cell that already flip after generate board (only clear and number)
   const openCellCount = board.flat().filter((cell) => cell !== 0 && cell < 9).length;
-  // console.log(openCellCount, board, userInput, mineMap);
+  // 11 - smily face (normal)
+  // 12 - smug face (win)
+  // 13 - dead face (lose)
+  const faceValue = isWinning() ? 12 : !isFailing ? 11 : 13;
 
   // Game end when open all cell except mine (reveal flag)
-  if (openCellCount + mineCount === userInput.length * userInput[0].length) {
+  if (isWinning()) {
     revealMines(12);
   }
 
@@ -237,41 +245,48 @@ const Home = () => {
 
   return (
     <div className={styles.container}>
-      <button onClick={restartGame}>Restart</button>
-      <div className={styles.board}>
-        {board.map((row, y) =>
-          row.map((val, x) => (
-            <div
-              className={styles.cell}
-              key={`${x}-${y}`}
-              onClick={() => onClick(x, y)}
-              onContextMenu={(e) => handleContextMenu(x, y, e)}
-            >
-              {/* {mineMap[y][x]} */}
-              {val !== -1 &&
-                (val === 0 ? (
-                  <div className={styles.square} />
-                ) : val === 9 || val === 10 ? (
-                  // Flag mark
-                  <div className={styles.square}>
+      <div className={styles.minesweeper}>
+        <div className={styles.header}>
+          <button
+            onClick={restartGame}
+            style={{ backgroundPosition: `${-29.95 * 1.5 * faceValue}px` }}
+          />
+        </div>
+        <div className={styles.board}>
+          {board.map((row, y) =>
+            row.map((val, x) => (
+              <div
+                className={styles.cell}
+                key={`${x}-${y}`}
+                onClick={() => onClick(x, y)}
+                onContextMenu={(e) => handleContextMenu(x, y, e)}
+              >
+                {/* {mineMap[y][x]} */}
+                {val !== -1 &&
+                  (val === 0 ? (
+                    <div className={styles.square} />
+                  ) : val === 9 || val === 10 ? (
+                    // Flag mark
+                    <div className={styles.square}>
+                      <div
+                        className={styles.icon}
+                        style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
+                      />
+                    </div>
+                  ) : val === 12 ? (
+                    // Flag clear
+                    <div className={styles.icon} style={{ backgroundPosition: `${-30 * 9}px` }} />
+                  ) : (
+                    // Other; icon and mine
                     <div
                       className={styles.icon}
                       style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
                     />
-                  </div>
-                ) : val === 12 ? (
-                  // Flag clear
-                  <div className={styles.icon} style={{ backgroundPosition: `${-30 * 9}px` }} />
-                ) : (
-                  // Other; icon and mine
-                  <div
-                    className={styles.icon}
-                    style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
-                  />
-                ))}
-            </div>
-          ))
-        )}
+                  ))}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
