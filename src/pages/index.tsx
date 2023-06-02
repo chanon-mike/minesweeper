@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './index.module.css';
 
 const Home = () => {
@@ -28,6 +28,8 @@ const Home = () => {
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
   ]);
+  // (startTime, currentTime)
+  const [counter, setCounter] = useState(0);
 
   const mineCount = 10;
   const directions = [
@@ -50,7 +52,7 @@ const Home = () => {
   // 12 -> clear + flag
   let board: number[][] = [];
 
-  // const isPlaying = userInput.some((row) => row.some((input) => input !== 0));
+  const isPlaying = userInput.some((row) => row.some((input) => input !== 0));
   const isFailing = userInput.some((row, y) =>
     row.some((input, x) => input === 1 && mineMap[y][x] === 1)
   );
@@ -75,11 +77,6 @@ const Home = () => {
       currentMineCount = newmineMap.flat().filter((cell: number) => cell === 1).length;
     }
     setMineMap(newmineMap);
-  };
-
-  // Check if game end (reveal flag)
-  const isWinning = () => {
-    return openCellCount + mineCount === userInput.length * userInput[0].length;
   };
 
   // Calculate mine count nearby
@@ -157,19 +154,23 @@ const Home = () => {
     // Generate the board based on userInput and mineMap
     for (let y = 0; y < yLength; y++) {
       for (let x = 0; x < xLength; x++) {
-        if (userInput[y][x] === 1) {
-          if (mineMap[y][x] === 1) {
-            // Reveal all mines
-            revealMines(11);
-          } else {
-            revealNearbyCell(x, y);
-          }
-        } else if (userInput[y][x] === 2) {
-          // question mark
-          board[y][x] = 10;
-        } else if (userInput[y][x] === 3) {
-          // flag mark
-          board[y][x] = 9;
+        switch (userInput[y][x]) {
+          case 1:
+            if (mineMap[y][x] === 1) {
+              // Reveal all mines
+              revealMines(11);
+            } else {
+              revealNearbyCell(x, y);
+            }
+            break;
+          case 2:
+            // question mark
+            board[y][x] = 10;
+            break;
+          case 3:
+            // flag mark
+            board[y][x] = 9;
+            break;
         }
       }
     }
@@ -181,21 +182,42 @@ const Home = () => {
 
   // Count the cell that already flip after generate board (only clear and number)
   const openCellCount = board.flat().filter((cell) => cell !== 0 && cell < 9).length;
+  // Check if game end (reveal flag)
+  const isWinning = openCellCount + mineCount === userInput.length * userInput[0].length;
   // 11 - smily face (normal)
   // 12 - smug face (win)
   // 13 - dead face (lose)
-  const faceValue = isWinning() ? 12 : !isFailing ? 11 : 13;
+  const faceValue = isWinning ? 12 : !isFailing ? 11 : 13;
+  // Placeable number (flag, counter) format in 3 digit
+  const placeableFlagCount = mineCount - board.flat().filter((cell) => cell === 10).length;
+  const displayNum = {
+    placeableFlagCount: `000${(placeableFlagCount > 999
+      ? 999
+      : placeableFlagCount
+    ).toString()}`.slice(-3),
+    counterCount: `000${counter.toString()}`.slice(-3),
+  };
 
   // Game end when open all cell except mine (reveal flag)
-  if (isWinning()) {
+  if (isWinning) {
     revealMines(12);
   }
+
+  // Counter time interval for each second
+  useEffect(() => {
+    if (counter < 999) {
+      const timer =
+        isPlaying && !isFailing && !isWinning && setTimeout(() => setCounter(counter + 1), 1000);
+      return () => clearInterval(timer as NodeJS.Timeout);
+    }
+  }, [counter, isPlaying, isFailing, isWinning]);
 
   // Left Click
   const onClick = (x: number, y: number) => {
     // Generate random mine only once at the start
     if (isFirst) {
       plantMines(x, y);
+      setCounter(0);
     }
 
     if (board[y][x] === 0 && !isFailing) {
@@ -211,17 +233,18 @@ const Home = () => {
     e.preventDefault();
     const newUserInput: (0 | 1 | 2 | 3)[][] = JSON.parse(JSON.stringify(userInput));
 
-    if (board[y][x] === 0 && !isFailing) {
-      // flag
-      newUserInput[y][x] = 2;
-    } else if (userInput[y][x] === 2 && !isFailing) {
-      // question mark
-      newUserInput[y][x] = 3;
-    } else if (userInput[y][x] === 3 && !isFailing) {
-      // return to normal
-      newUserInput[y][x] = 0;
+    if (!isFailing) {
+      if (board[y][x] === 0) {
+        // flag
+        newUserInput[y][x] = 2;
+      } else if (userInput[y][x] === 2) {
+        // question mark
+        newUserInput[y][x] = 3;
+      } else if (userInput[y][x] === 3) {
+        // return to normal
+        newUserInput[y][x] = 0;
+      }
     }
-
     setUserInput(newUserInput);
   };
 
@@ -241,16 +264,29 @@ const Home = () => {
     board = newInitialBoard;
     setUserInput(newInitialBoard);
     setMineMap(newInitialBoard);
+    setCounter(0);
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.minesweeper}>
         <div className={styles.header}>
+          <div className={styles.number} style={{ left: 15 }}>
+            <div className={styles.backgroundNum}>888</div>
+            <span>{displayNum.placeableFlagCount.charAt(0)}</span>
+            <span>{displayNum.placeableFlagCount.charAt(1)}</span>
+            <span>{displayNum.placeableFlagCount.charAt(2)}</span>
+          </div>
           <button
             onClick={restartGame}
             style={{ backgroundPosition: `${-29.95 * 1.5 * faceValue}px` }}
           />
+          <div className={styles.number} style={{ right: 15 }}>
+            <div className={styles.backgroundNum}>888</div>
+            <span>{displayNum.counterCount.charAt(0)}</span>
+            <span>{displayNum.counterCount.charAt(1)}</span>
+            <span>{displayNum.counterCount.charAt(2)}</span>
+          </div>
         </div>
         <div className={styles.board}>
           {board.map((row, y) =>
@@ -264,9 +300,10 @@ const Home = () => {
                 {/* {mineMap[y][x]} */}
                 {val !== -1 &&
                   (val === 0 ? (
+                    // Empty
                     <div className={styles.square} />
                   ) : val === 9 || val === 10 ? (
-                    // Flag mark
+                    // Flag mark and question mark
                     <div className={styles.square}>
                       <div
                         className={styles.icon}
@@ -277,7 +314,7 @@ const Home = () => {
                     // Flag clear
                     <div className={styles.icon} style={{ backgroundPosition: `${-30 * 9}px` }} />
                   ) : (
-                    // Other; icon and mine
+                    // Other; number and mine
                     <div
                       className={styles.icon}
                       style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
