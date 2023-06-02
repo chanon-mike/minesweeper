@@ -1,33 +1,30 @@
 import { useEffect, useState } from 'react';
 import styles from './index.module.css';
 
+const initialBoardSize: { width: number; height: number } = {
+  width: 8,
+  height: 8,
+};
+
+const initialUserInput: (0 | 1 | 2 | 3)[][] = Array.from({ length: initialBoardSize.height }, () =>
+  Array(initialBoardSize.width).fill(0)
+);
+
+const initialMineMap: number[][] = Array.from({ length: initialBoardSize.height }, () =>
+  Array(initialBoardSize.width).fill(0)
+);
+
 const Home = () => {
+  // initial board size of 8 x 8
+  const [boardSize, setBoardSize] = useState<{ width: number; height: number }>(initialBoardSize);
   // 0 -> non click
   // 1 -> left click
   // 2 -> flag mark
   // 3 -> question mark
-  const [userInput, setUserInput] = useState<(0 | 1 | 2 | 3)[][]>([
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-  ]);
+  const [userInput, setUserInput] = useState<(0 | 1 | 2 | 3)[][]>(initialUserInput);
   // o -> mine
   // 1 -> no mine
-  const [mineMap, setMineMap] = useState([
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-  ]);
+  const [mineMap, setMineMap] = useState(initialMineMap);
   // (startTime, currentTime)
   const [counter, setCounter] = useState(0);
 
@@ -251,27 +248,75 @@ const Home = () => {
   // Restart
   const restartGame = () => {
     // Initialize empty board
-    const newInitialBoard: (0 | 1 | 2 | 3)[][] = [
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-    ];
+    const newInitialBoard: (0 | 1 | 2 | 3)[][] = Array.from(
+      { length: initialBoardSize.height },
+      () => Array(initialBoardSize.width).fill(0)
+    );
     board = newInitialBoard;
     setUserInput(newInitialBoard);
     setMineMap(newInitialBoard);
     setCounter(0);
   };
 
+  // Handle change size event
+  const handleSizeUpdate = () => {
+    const updatedUserInput = Array.from({ length: boardSize.height }, () =>
+      Array(boardSize.width).fill(0)
+    );
+    const updatedMineMap = Array.from({ length: boardSize.height }, () =>
+      Array(boardSize.width).fill(0)
+    );
+    setUserInput(updatedUserInput);
+    setMineMap(updatedMineMap);
+
+    console.log(updatedUserInput, updatedMineMap);
+  };
+
   return (
     <div className={styles.container}>
+      <form>
+        <label>
+          Width:
+          <input
+            type="number"
+            value={boardSize.width}
+            onChange={(e) =>
+              setBoardSize((prevSize) => ({
+                ...prevSize,
+                width: parseInt(e.target.value),
+              }))
+            }
+          />
+        </label>
+        <label>
+          Height:
+          <input
+            type="number"
+            value={boardSize.height}
+            onChange={(e) =>
+              setBoardSize((prevSize) => ({
+                ...prevSize,
+                height: parseInt(e.target.value),
+              }))
+            }
+          />
+        </label>
+        <button type="button" onClick={handleSizeUpdate}>
+          Update Size
+        </button>
+      </form>
+
       <div className={styles.minesweeper}>
-        <div className={styles.header}>
-          <div className={styles.number} style={{ left: 15 }}>
+        <div
+          className={styles.header}
+          style={userInput[0].length < 3 ? { display: 'none' } : { display: 'flex' }}
+        >
+          <div
+            className={styles.number}
+            style={
+              userInput[0].length < 3 ? { display: 'none' } : { display: 'flex' } && { left: 10 }
+            }
+          >
             <div className={styles.backgroundNum}>888</div>
             <span>{displayNum.placeableFlagCount.charAt(0)}</span>
             <span>{displayNum.placeableFlagCount.charAt(1)}</span>
@@ -279,16 +324,28 @@ const Home = () => {
           </div>
           <button
             onClick={restartGame}
-            style={{ backgroundPosition: `${-29.95 * 1.5 * faceValue}px` }}
+            style={
+              userInput[0].length < 6
+                ? { display: 'none' }
+                : { display: 'flex' } && { backgroundPosition: `${-29.95 * 1.5 * faceValue}px` }
+            }
           />
-          <div className={styles.number} style={{ right: 15 }}>
+          <div
+            className={styles.number}
+            style={
+              userInput[0].length < 4 ? { display: 'none' } : { display: 'flex' } && { right: 10 }
+            }
+          >
             <div className={styles.backgroundNum}>888</div>
             <span>{displayNum.counterCount.charAt(0)}</span>
             <span>{displayNum.counterCount.charAt(1)}</span>
             <span>{displayNum.counterCount.charAt(2)}</span>
           </div>
         </div>
-        <div className={styles.board}>
+        <div
+          className={styles.board}
+          style={{ minWidth: userInput[0].length * 60, minHeight: userInput.length * 60 }}
+        >
           {board.map((row, y) =>
             row.map((val, x) => (
               <div

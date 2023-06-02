@@ -124,6 +124,11 @@
 /* first click isn't bomb */
 
 /* Board and cell */
+.container form input {
+  margin: 5px;
+  width: 60px;
+}
+
 .minesweeper {
   background-color: #c0c0c0;
   padding: 20px;
@@ -191,10 +196,10 @@
 }
 
 .board {
-  max-width: 640px;
-  aspect-ratio: 1;
+  position: relative;
   display: grid;
-  grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  grid-template-rows: repeat(auto-fill, minmax(60px, 1fr));
   background-color: #c0c0c0;
   border-color: #858585 #fff #fff #858585;
   border-style: solid;
