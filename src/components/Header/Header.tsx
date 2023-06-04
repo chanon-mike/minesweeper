@@ -1,4 +1,4 @@
-import type { userInputArray } from '../../pages';
+import type { userInputArray } from '../../utils/boardUtils';
 import Counter from '../Counter/Counter';
 import RestartButton from '../RestartButton/RestartButton';
 import styles from './Header.module.css';

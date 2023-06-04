@@ -12,11 +12,9 @@ const Cell = ({ x, y, val, onClick, handleContextMenu }: CellProps) => {
   return (
     <div
       className={styles.cell}
-      key={`${x}-${y}`}
       onClick={() => onClick(x, y)}
       onContextMenu={(e) => handleContextMenu(x, y, e)}
     >
-      {/* {mineMap[y][x]} */}
       {val !== -1 &&
         (val === 0 ? (
           // Empty

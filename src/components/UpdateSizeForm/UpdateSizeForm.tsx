@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
-import type { boardSizeHash } from '../../pages';
+import type { boardSizeHash } from '../../utils/boardUtils';
 import styles from './UpdateSizeForm.module.css';
 
 type UpdateSizeFormProps = {

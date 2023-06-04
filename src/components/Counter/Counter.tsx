@@ -1,4 +1,4 @@
-import type { userInputArray } from '../../pages';
+import type { userInputArray } from '../../utils/boardUtils';
 import styles from './Counter.module.css';
 
 type CounterProps = {

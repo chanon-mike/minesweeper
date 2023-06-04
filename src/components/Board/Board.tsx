@@ -1,4 +1,4 @@
-import type { boardArray, userInputArray } from '../../pages';
+import type { boardArray, userInputArray } from '../../utils/boardUtils';
 import Cell from '../Cell/Cell';
 import styles from './Board.module.css';
 
