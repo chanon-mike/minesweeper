@@ -1,0 +1,16 @@
+.restart {
+  width: 60px;
+  height: 60px;
+  background-image: url('~/assets/images/icons.png');
+  background-size: calc(420px * 1.5) calc(30px * 1.5);
+  margin: auto;
+  border-color: #fff #858585 #858585 #fff;
+  border-style: solid;
+  border-width: 0.5em;
+}
+
+.restart:active {
+  /* Added styles for the pushed effect */
+  border-color: #858585;
+  border-width: 0.6em 0.4em 0.4em 0.6em;
+}

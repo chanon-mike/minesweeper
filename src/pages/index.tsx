@@ -1,27 +1,34 @@
 import { useEffect, useState } from 'react';
+import Board from '../components/Board/Board';
+import Header from '../components/Header/Header';
+import UpdateSizeForm from '../components/UpdateSizeForm/UpdateSizeForm';
 import styles from './index.module.css';
 
-const initialBoardSize: { width: number; height: number } = {
+export type boardSizeHash = { width: number; height: number };
+export type userInputArray = (0 | 1 | 2 | 3)[][];
+export type boardArray = number[][];
+
+const initialBoardSize: boardSizeHash = {
   width: 8,
   height: 8,
 };
 
-const initialUserInput: (0 | 1 | 2 | 3)[][] = Array.from({ length: initialBoardSize.height }, () =>
+const initialUserInput: userInputArray = Array.from({ length: initialBoardSize.height }, () =>
   Array(initialBoardSize.width).fill(0)
 );
 
-const initialMineMap: number[][] = Array.from({ length: initialBoardSize.height }, () =>
+const initialMineMap: boardArray = Array.from({ length: initialBoardSize.height }, () =>
   Array(initialBoardSize.width).fill(0)
 );
 
 const Home = () => {
   // initial board size of 8 x 8
-  const [boardSize, setBoardSize] = useState<{ width: number; height: number }>(initialBoardSize);
+  const [boardSize, setBoardSize] = useState<boardSizeHash>(initialBoardSize);
   // 0 -> non click
   // 1 -> left click
   // 2 -> flag mark
   // 3 -> question mark
-  const [userInput, setUserInput] = useState<(0 | 1 | 2 | 3)[][]>(initialUserInput);
+  const [userInput, setUserInput] = useState<userInputArray>(initialUserInput);
   // o -> mine
   // 1 -> no mine
   const [mineMap, setMineMap] = useState(initialMineMap);
@@ -47,7 +54,7 @@ const Home = () => {
   // 10 -> square + question mark
   // 11 -> clear + mine
   // 12 -> clear + flag
-  let board: number[][] = [];
+  let board: boardArray = [];
 
   const isPlaying = userInput.some((row) => row.some((input) => input !== 0));
   const isFailing = userInput.some((row, y) =>
@@ -274,113 +281,24 @@ const Home = () => {
 
   return (
     <div className={styles.container}>
-      <form>
-        <label>
-          Width:
-          <input
-            type="number"
-            value={boardSize.width}
-            onChange={(e) =>
-              setBoardSize((prevSize) => ({
-                ...prevSize,
-                width: parseInt(e.target.value),
-              }))
-            }
-          />
-        </label>
-        <label>
-          Height:
-          <input
-            type="number"
-            value={boardSize.height}
-            onChange={(e) =>
-              setBoardSize((prevSize) => ({
-                ...prevSize,
-                height: parseInt(e.target.value),
-              }))
-            }
-          />
-        </label>
-        <button type="button" onClick={handleSizeUpdate}>
-          Update Size
-        </button>
-      </form>
-
+      <UpdateSizeForm
+        boardSize={boardSize}
+        setBoardSize={setBoardSize}
+        handleSizeUpdate={handleSizeUpdate}
+      />
       <div className={styles.minesweeper}>
-        <div
-          className={styles.header}
-          style={userInput[0].length < 3 ? { display: 'none' } : { display: 'flex' }}
-        >
-          <div
-            className={styles.number}
-            style={
-              userInput[0].length < 3 ? { display: 'none' } : { display: 'flex' } && { left: 10 }
-            }
-          >
-            <div className={styles.backgroundNum}>888</div>
-            <span>{displayNum.placeableFlagCount.charAt(0)}</span>
-            <span>{displayNum.placeableFlagCount.charAt(1)}</span>
-            <span>{displayNum.placeableFlagCount.charAt(2)}</span>
-          </div>
-          <button
-            onClick={restartGame}
-            style={
-              userInput[0].length < 6
-                ? { display: 'none' }
-                : { display: 'flex' } && { backgroundPosition: `${-29.95 * 1.5 * faceValue}px` }
-            }
-          />
-          <div
-            className={styles.number}
-            style={
-              userInput[0].length < 4 ? { display: 'none' } : { display: 'flex' } && { right: 10 }
-            }
-          >
-            <div className={styles.backgroundNum}>888</div>
-            <span>{displayNum.counterCount.charAt(0)}</span>
-            <span>{displayNum.counterCount.charAt(1)}</span>
-            <span>{displayNum.counterCount.charAt(2)}</span>
-          </div>
-        </div>
-        <div
-          className={styles.board}
-          style={{ minWidth: userInput[0].length * 60, minHeight: userInput.length * 60 }}
-        >
-          {board.map((row, y) =>
-            row.map((val, x) => (
-              <div
-                className={styles.cell}
-                key={`${x}-${y}`}
-                onClick={() => onClick(x, y)}
-                onContextMenu={(e) => handleContextMenu(x, y, e)}
-              >
-                {/* {mineMap[y][x]} */}
-                {val !== -1 &&
-                  (val === 0 ? (
-                    // Empty
-                    <div className={styles.square} />
-                  ) : val === 9 || val === 10 ? (
-                    // Flag mark and question mark
-                    <div className={styles.square}>
-                      <div
-                        className={styles.icon}
-                        style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
-                      />
-                    </div>
-                  ) : val === 12 ? (
-                    // Flag clear
-                    <div className={styles.icon} style={{ backgroundPosition: `${-30 * 9}px` }} />
-                  ) : (
-                    // Other; number and mine
-                    <div
-                      className={styles.icon}
-                      style={{ backgroundPosition: `${-30 * (val - 1)}px` }}
-                    />
-                  ))}
-              </div>
-            ))
-          )}
-        </div>
+        <Header
+          userInput={userInput}
+          displayNum={displayNum}
+          restartGame={restartGame}
+          faceValue={faceValue}
+        />
+        <Board
+          board={board}
+          userInput={userInput}
+          onCellClick={onClick}
+          onContextMenu={handleContextMenu}
+        />
       </div>
     </div>
   );
